@@ -1,3 +1,55 @@
+#ifndef SJTU_EXCEPTIONS_HPP
+#define SJTU_EXCEPTIONS_HPP
+
+#include <cstddef>
+#include <cstring>
+#include <string>
+
+namespace sjtu {
+
+class exception {
+protected:
+    const std::string variant = "";
+    std::string detail = "";
+public:
+    exception() {}
+    exception(const exception &ec) : variant(ec.variant), detail(ec.detail) {}
+    virtual std::string what() {
+        return variant + " " + detail;
+    }
+};
+
+class index_out_of_bound : public exception {
+public:
+    index_out_of_bound() {
+        const_cast<std::string&>(variant) = "index_out_of_bound";
+    }
+};
+
+class runtime_error : public exception {
+public:
+    runtime_error() {
+        const_cast<std::string&>(variant) = "runtime_error";
+    }
+};
+
+class invalid_iterator : public exception {
+public:
+    invalid_iterator() {
+        const_cast<std::string&>(variant) = "invalid_iterator";
+    }
+};
+
+class container_is_empty : public exception {
+public:
+    container_is_empty() {
+        const_cast<std::string&>(variant) = "container_is_empty";
+    }
+};
+
+}
+
+#endif
 #ifndef SJTU_DEQUE_HPP
 #define SJTU_DEQUE_HPP
 
@@ -464,10 +516,9 @@ public:
             throw index_out_of_bound();
         }
         
-        size_t absolutePos = frontIndex + pos;
-        size_t blockOffset = absolutePos / BLOCK_SIZE;
-        size_t idx = absolutePos % BLOCK_SIZE;
-        size_t blockIdx = frontBlock + blockOffset;
+        size_t currentPos = pos + frontIndex;
+        size_t blockIdx = frontBlock + currentPos / BLOCK_SIZE;
+        size_t idx = currentPos % BLOCK_SIZE;
         
         return blocks[blockIdx]->data[idx];
     }
@@ -477,10 +528,9 @@ public:
             throw index_out_of_bound();
         }
         
-        size_t absolutePos = frontIndex + pos;
-        size_t blockOffset = absolutePos / BLOCK_SIZE;
-        size_t idx = absolutePos % BLOCK_SIZE;
-        size_t blockIdx = frontBlock + blockOffset;
+        size_t currentPos = pos + frontIndex;
+        size_t blockIdx = frontBlock + currentPos / BLOCK_SIZE;
+        size_t idx = currentPos % BLOCK_SIZE;
         
         return blocks[blockIdx]->data[idx];
     }
@@ -559,9 +609,7 @@ public:
         
         if (pos == end()) {
             push_back(value);
-            iterator result = end();
-            --result;
-            return result;
+            return iterator(this, backBlock, backIndex - 1);
         }
         
         push_back(value);
@@ -681,3 +729,59 @@ public:
 }
 
 #endif
+#include <iostream>
+#include <string>
+#include "deque.hpp"
+
+int main() {
+    std::ios::sync_with_stdio(false);
+    std::cin.tie(0);
+    
+    int n;
+    std::cin >> n;
+    
+    sjtu::deque<int> dq;
+    
+    for (int i = 0; i < n; ++i) {
+        std::string op;
+        std::cin >> op;
+        
+        try {
+            if (op == "push_back") {
+                int x;
+                std::cin >> x;
+                dq.push_back(x);
+            } else if (op == "push_front") {
+                int x;
+                std::cin >> x;
+                dq.push_front(x);
+            } else if (op == "pop_back") {
+                dq.pop_back();
+            } else if (op == "pop_front") {
+                dq.pop_front();
+            } else if (op == "front") {
+                std::cout << dq.front() << std::endl;
+            } else if (op == "back") {
+                std::cout << dq.back() << std::endl;
+            } else if (op == "size") {
+                std::cout << dq.size() << std::endl;
+            } else if (op == "empty") {
+                std::cout << (dq.empty() ? "true" : "false") << std::endl;
+            } else if (op == "clear") {
+                dq.clear();
+            } else if (op == "at") {
+                int pos;
+                std::cin >> pos;
+                std::cout << dq.at(pos) << std::endl;
+            } else if (op == "[]") {
+                int pos;
+                std::cin >> pos;
+                std::cout << dq[pos] << std::endl;
+            }
+        } catch (const sjtu::exception &e) {
+            std::cout << "error" << std::endl;
+        }
+    }
+    
+    return 0;
+}
