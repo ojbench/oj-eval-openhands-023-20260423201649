@@ -666,10 +666,11 @@ public:
         
         if (backIndex == 0) {
             --backBlock;
-            backIndex = BLOCK_SIZE;
+            backIndex = BLOCK_SIZE - 1;
+        } else {
+            --backIndex;
         }
         
-        --backIndex;
         blocks[backBlock]->data[backIndex].~T();
         --totalSize;
         
