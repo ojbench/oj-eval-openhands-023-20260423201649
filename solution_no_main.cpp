@@ -68,27 +68,17 @@ private:
         size_t capacity;
         
         Block() : data(nullptr), capacity(BLOCK_SIZE) {
-            data = (T*)malloc(sizeof(T) * capacity);
+            data = static_cast<T*>(::operator new(sizeof(T) * capacity));
         }
         
         ~Block() {
             if (data) {
-                free(data);
+                ::operator delete(data);
             }
         }
         
-        Block(const Block& other) : capacity(other.capacity) {
-            data = (T*)malloc(sizeof(T) * capacity);
-        }
-        
-        Block& operator=(const Block& other) {
-            if (this != &other) {
-                if (data) free(data);
-                capacity = other.capacity;
-                data = (T*)malloc(sizeof(T) * capacity);
-            }
-            return *this;
-        }
+        Block(const Block& other) = delete;
+        Block& operator=(const Block& other) = delete;
     };
     
     Block** blocks;
@@ -441,7 +431,7 @@ public:
         
         for (size_t i = 0; i < blockCapacity; ++i) {
             if (other.blocks[i] != nullptr) {
-                blocks[i] = new Block(*other.blocks[i]);
+                blocks[i] = new Block();
                 for (size_t j = 0; j < BLOCK_SIZE; ++j) {
                     if (i > other.frontBlock || (i == other.frontBlock && j >= other.frontIndex)) {
                         if (i < other.backBlock || (i == other.backBlock && j < other.backIndex)) {
@@ -488,7 +478,7 @@ public:
         
         for (size_t i = 0; i < blockCapacity; ++i) {
             if (other.blocks[i] != nullptr) {
-                blocks[i] = new Block(*other.blocks[i]);
+                blocks[i] = new Block();
                 for (size_t j = 0; j < BLOCK_SIZE; ++j) {
                     if (i > other.frontBlock || (i == other.frontBlock && j >= other.frontIndex)) {
                         if (i < other.backBlock || (i == other.backBlock && j < other.backIndex)) {
